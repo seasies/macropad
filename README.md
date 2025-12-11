@@ -5,10 +5,10 @@ Custom macro configurations for the [Adafruit MACROPAD RP2040](https://www.adafr
 ## Setup
 
 1. Install CircuitPython on your MACROPAD
-2. Copy `secrets.py.sample` to `secrets.py` and add your passwords:
+2. Copy `secrets.py.sample` to `secrets.py` and add your credentials:
    ```bash
    cp macros/secrets.py.sample macros/secrets.py
-   # Edit macros/secrets.py with your passwords
+   # Edit macros/secrets.py with your credentials
    ```
 3. Deploy to the macropad:
    ```bash

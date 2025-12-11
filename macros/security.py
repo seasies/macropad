@@ -1,19 +1,19 @@
 # MACROPAD Hotkeys: Security/Passwords
 
 from adafruit_hid.keycode import Keycode # REQUIRED if using Keycode.* values
-from secrets import PASSWORDS
+from secrets import CREDENTIALS
 
 app = {                # REQUIRED dict, must be named 'app'
     'name' : 'Security', # Application name
     'macros' : [       # List of button macros...
         # COLOR    LABEL    KEY SEQUENCE
         # 1st row ----------
-        (0xFFFF00, 'P1', [-Keycode.COMMAND, PASSWORDS['P1'] + '\n']),
+        (0xFFFF00, CREDENTIALS['P1']['name'], [-Keycode.COMMAND, CREDENTIALS['P1']['password'] + '\n']),
         (0x000000, ' ', [-Keycode.COMMAND, '']),
         (0x000000, ' ', [-Keycode.COMMAND, '']),
 #         # 2nd row ----------
-        (0x0000FF, 'P2', [-Keycode.COMMAND, PASSWORDS['P2'] + '\n']),
-        (0x00FF00, 'P3', [-Keycode.COMMAND, PASSWORDS['P3'] + '\n']),
+        (0x0000FF, CREDENTIALS['P2']['name'], [-Keycode.COMMAND, CREDENTIALS['P2']['password'] + '\n']),
+        (0x00FF00, CREDENTIALS['P3']['name'], [-Keycode.COMMAND, CREDENTIALS['P3']['password'] + '\n']),
         (0x000000, ' ', [-Keycode.COMMAND, '']),
 #         # 3rd row ----------
         (0x000000, ' ', [-Keycode.COMMAND, '']),
