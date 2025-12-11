@@ -12,6 +12,7 @@ deploy: check-mount
     cp boot.py {{CIRCUITPY}}/
     cp code.py {{CIRCUITPY}}/
     cp reset_boot.py {{CIRCUITPY}}/
+    cp secrets.py {{CIRCUITPY}}/
     cp -r macros {{CIRCUITPY}}/
     @echo "Deployed to {{CIRCUITPY}}"
 
