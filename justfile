@@ -1,6 +1,7 @@
 # Macropad deployment recipes
 
 CIRCUITPY := "/media/alsobrsp/CIRCUITPY"
+SERIAL_PATTERN := "/dev/serial/by-id/usb-Adafruit_Macropad_RP2040_*-if00"
 
 # Default recipe - show available commands
 default:
@@ -10,6 +11,7 @@ default:
 deploy: check-mount
     cp boot.py {{CIRCUITPY}}/
     cp code.py {{CIRCUITPY}}/
+    cp reset_boot.py {{CIRCUITPY}}/
     cp -r macros {{CIRCUITPY}}/
     @echo "Deployed to {{CIRCUITPY}}"
 
@@ -22,10 +24,18 @@ deploy-macros: check-mount
 check-mount:
     @test -d {{CIRCUITPY}} || (echo "Error: CIRCUITPY not mounted at {{CIRCUITPY}}" && exit 1)
 
-# Reset the macropad by copying reset_boot.py
-reset: check-mount
-    cp reset_boot.py {{CIRCUITPY}}/boot.py
-    @echo "Reset boot.py deployed - reconnect the macropad"
+# Reset via serial console to re-enable USB storage
+serial-reset:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    SERIAL=$(ls {{SERIAL_PATTERN}} 2>/dev/null | head -1)
+    if [[ -z "$SERIAL" ]]; then
+        echo "Error: No Macropad serial device found matching {{SERIAL_PATTERN}}"
+        exit 1
+    fi
+    stty -F "$SERIAL" 115200 raw
+    printf '\003' > "$SERIAL"
+    echo "Sent Ctrl-C to $SERIAL - macropad will reboot with USB storage enabled"
 
 # Watch for changes and auto-deploy macros
 watch:

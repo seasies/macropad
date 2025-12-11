@@ -23,7 +23,7 @@ Requires [just](https://github.com/casey/just) command runner.
 |---------|-------------|
 | `just deploy` | Deploy all files to the macropad |
 | `just deploy-macros` | Deploy only the macros folder (faster) |
-| `just reset` | Deploy reset_boot.py to re-enable USB storage |
+| `just serial-reset` | Send Ctrl-C via serial to re-enable USB storage |
 | `just watch` | Auto-deploy on file changes |
 
 The macropad mounts at `/media/alsobrsp/CIRCUITPY/`.
@@ -71,4 +71,19 @@ app = {
 ## Boot Configuration
 
 - **boot.py** - Disables USB mass storage for security, keeps REPL enabled
-- **reset_boot.py** - Use `just reset` to restore USB mass storage access
+- **reset_boot.py** - Deployed with code.py to enable recovery via serial console
+
+### Restoring USB Storage Access
+
+When `boot.py` disables USB mass storage, use `just serial-reset` to regain filesystem access:
+
+```bash
+just serial-reset
+```
+
+Or manually:
+
+1. Connect to the MACROPAD serial console (e.g., `screen /dev/serial/by-id/usb-Adafruit_Macropad_RP2040_*-if00 115200`)
+2. Press `Ctrl-C` to interrupt `code.py`
+3. The KeyboardInterrupt handler runs `reset_boot.py`, which deletes `boot.py` and reboots
+4. USB mass storage will be re-enabled on next boot
