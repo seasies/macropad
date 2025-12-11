@@ -1,0 +1,7 @@
+# Secrets
+macros/secrets.py
+
+# CircuitPython
+*.mpy
+.Trashes
+.fseventsd
