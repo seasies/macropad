@@ -1,7 +1,7 @@
 # Macropad deployment recipes
 
 CIRCUITPY := "/media/alsobrsp/CIRCUITPY"
-SERIAL_PATTERN := "/dev/serial/by-id/usb-Adafruit_Macropad_RP2040_*-if00"
+SERIAL_PATTERN := "/dev/serial/by-id/usb-Adafruit_Macropad_RP2040_*"
 
 # Default recipe - show available commands
 default:
