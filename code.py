@@ -25,6 +25,11 @@ from adafruit_macropad import MacroPad
 
 MACRO_FOLDER = '/macros'
 
+# Security lock settings
+SECURITY_APP_NAME = 'Security'  # Name of protected app
+UNLOCK_KEYS = {9, 10, 11}       # Key indices for bottom row (0-indexed)
+LOCK_TIMEOUT = 300              # Seconds before auto-lock
+
 
 # CLASSES AND FUNCTIONS ----------------
 
@@ -36,16 +41,19 @@ class App:
         self.name = appdata['name']
         self.macros = appdata['macros']
 
-    def switch(self):
+    def switch(self, locked=False):
         """ Activate application settings; update OLED labels and LED
-            colors. """
+            colors. If locked=True, show blank screen instead. """
         group[13].text = self.name   # Application name
-        if self.name:
+        if self.name and not locked:
             rect.fill = 0xFFFFFF
-        else: # empty app name indicates blank screen for which we dimm header
+        else: # empty app name or locked indicates blank screen
             rect.fill = 0x000000
         for i in range(12):
-            if i < len(self.macros): # Key in use, set label + LED color
+            if locked:  # Locked: show blank
+                macropad.pixels[i] = 0
+                group[i].text = ''
+            elif i < len(self.macros): # Key in use, set label + LED color
                 macropad.pixels[i] = self.macros[i][0]
                 group[i].text = self.macros[i][1]
             else:  # Key not in use, no label or LED
@@ -57,6 +65,16 @@ class App:
         macropad.stop_tone()
         macropad.pixels.show()
         macropad.display.refresh()
+
+
+def is_security_app(app):
+    """Check if app is the protected security app."""
+    return app.name == SECURITY_APP_NAME
+
+
+def is_security_locked(app):
+    """Check if we should show locked state for this app."""
+    return is_security_app(app) and not security_unlocked
 
 
 # INITIALIZATION -----------------------
@@ -106,18 +124,49 @@ if not apps:
 last_position = None
 last_encoder_switch = macropad.encoder_switch_debounced.pressed
 app_index = 0
-apps[app_index].switch()
+
+# Security lock state
+security_unlocked = False
+unlock_time = 0
+keys_held = set()
+
+apps[app_index].switch(is_security_locked(apps[app_index]))
 
 
 # MAIN LOOP ----------------------------
 try:
     while True:
+        # Check security timeout
+        if security_unlocked and time.monotonic() - unlock_time > LOCK_TIMEOUT:
+            security_unlocked = False
+            if is_security_app(apps[app_index]):
+                apps[app_index].switch(locked=True)
+
         # Read encoder position. If it's changed, switch apps.
         position = macropad.encoder
         if position != last_position:
             app_index = position % len(apps)
-            apps[app_index].switch()
+            apps[app_index].switch(is_security_locked(apps[app_index]))
             last_position = position
+
+        # Track key events for security unlock detection
+        event = macropad.keys.events.get()
+        if event:
+            if event.pressed:
+                keys_held.add(event.key_number)
+            else:
+                keys_held.discard(event.key_number)
+
+            # Check for unlock combo (bottom 3 keys)
+            if UNLOCK_KEYS.issubset(keys_held) and not security_unlocked:
+                security_unlocked = True
+                unlock_time = time.monotonic()
+                if is_security_app(apps[app_index]):
+                    apps[app_index].switch(locked=False)
+
+        # Reset timeout on any activity while unlocked on security page
+        if security_unlocked and is_security_app(apps[app_index]) and event:
+            unlock_time = time.monotonic()
 
         # Handle encoder button. If state has changed, and if there's a
         # corresponding macro, set up variables to act on this just like
@@ -130,12 +179,17 @@ try:
                 continue    # No 13th macro, just resume main loop
             key_number = 12 # else process below as 13th macro
             pressed = encoder_switch
-        else:
-            event = macropad.keys.events.get()
-            if not event or event.key_number >= len(apps[app_index].macros):
-                continue # No key events, or no corresponding macro, resume loop
+        elif event:
+            if event.key_number >= len(apps[app_index].macros):
+                continue # No corresponding macro, resume loop
             key_number = event.key_number
             pressed = event.pressed
+        else:
+            continue  # No key events, resume loop
+
+        # Skip macro execution if security page is locked
+        if is_security_locked(apps[app_index]):
+            continue
 
         # If code reaches here, a key or the encoder button WAS pressed/released
         # and there IS a corresponding macro available for it...other situations
