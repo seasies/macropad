@@ -40,8 +40,22 @@ Macros are stored in the `macros/` folder. Each file defines a macro set that ca
 - **media.py** - Media playback controls
 - **numpad.py** - Numeric keypad
 - **linux-firefox.py** - Firefox shortcuts
-- **security.py** - Password entry (uses secrets.py)
+- **security.py** - Password entry (uses secrets.py, locked by default)
 - **off.py** - Blank/off state
+
+### Security Lock
+
+The security macros page is locked by default to prevent accidental password entry. When locked, the page displays a blank screen with no labels or LEDs.
+
+**To unlock:** Press all 3 bottom row keys (keys 10, 11, 12) simultaneously.
+
+**Auto-lock:** The page automatically locks after 5 minutes of inactivity. Any key press while on the unlocked security page resets the timer.
+
+Configuration in `code.py`:
+
+- `SECURITY_APP_NAME` - Name of the protected app (default: `'Security'`)
+- `UNLOCK_KEYS` - Key indices for unlock combo (default: `{9, 10, 11}`, 0-indexed)
+- `LOCK_TIMEOUT` - Seconds before auto-lock (default: `300`)
 
 ### Creating a Macro
 
